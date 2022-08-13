@@ -1,5 +1,6 @@
 import pathlib 
 import os
+import sys
 
 
 PIPE = "│"
@@ -9,13 +10,20 @@ PIPE_PREFIX = "│   "
 SPACE_PREFIX = "    "
 
 class DirectoryTree:
-    def __init__(self, dir, dir_only=False):
+    def __init__(self, dir, dir_only=False, output_file=sys.stdout):
+        self._output_file = output_file
         self._generator = _TreeGen(dir, dir_only)
     
     def generate(self):
         entries = self._generator.build_tree()
-        for entry in entries:
-            print(entry)
+        if self._output_file != sys.stdout:
+            # Wrap the tree in a markdown code block
+            entries.insert(0, "```")
+            entries.append("```")
+            self._output_file = open(self._output_file, mode="w", encoding="UTF-8")
+        with self._output_file as stream:
+            for entry in entries:
+                print(entry, file=stream)
 
 class _TreeGen:
     def __init__(self, dir, dir_only=False):
